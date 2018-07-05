@@ -139,11 +139,13 @@ var updateSinglePersonality = (sourceName, type) => {
         "contentItems": JSON.parse(source[0][type][0]),
       };
       return getWatsonProfile(data)
-      .then(personality => {
+      .then(res => {
+        var personality = JSON.stringify(res);
         var queryString = `${type}Personality`;
         return Source.updateOne({name: sourceName}, {[queryString]: personality})
         .then(res => {
-          return `updated personality for ${sourceName}, ${type}`;
+          console.log(`updated personality for ${sourceName}, ${type}`);
+          return;
         })
         .catch(err => {
           return 'error updating source', err;

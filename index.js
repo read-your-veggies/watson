@@ -1,4 +1,4 @@
-exports.handler = async () => {
+exports.handler = () => {
     
     var watson = require('./db/watson.js');
     
