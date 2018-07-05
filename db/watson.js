@@ -105,17 +105,20 @@ var updateSourcesDb = (callback) => {
       return newSourceData;
     })
     .then(newSourceData => {
-      Source.remove({})
-      .then(() => {
-        Source.insertMany(newSourceData, (err, res) => {
-          if (err) return (err);
-          console.log('updated sources db');
-          if (callback) {
-            return callback();
-          } else {
-            return;
-          }
-        });    
+      return Source.remove({})
+      .then(res => {
+        return Source.insertMany(newSourceData) 
+        .then(res => {
+          return 'updated sources db';
+        })
+        .catch(err => {
+          return 'error inserting sources into db', err;
+        })
+          // if (callback) {
+          //   return callback();
+          // } else {
+          //   return 'updated sources db';
+          // }     
       })
       .catch(err => {
         return 'error inserting new source data in updateSourcesDb', err;
