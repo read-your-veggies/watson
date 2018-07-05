@@ -16,14 +16,15 @@ var getWatsonProfile = (data, callback) => {
     consumption_preferences: true,
     raw_scores: true
   };
-  personalityInsights.profile(profileParams, function(error, profile) {
-    if (error) {
-      console.log(error);
-      callback(error, null);
-    } else {
-      callback(null, JSON.stringify(profile, null, 2));
-    }
-  });
+  return new Promise((resolve, reject) => {
+    personalityInsights.profile(profileParams, (error, profile) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(profile);
+      }
+    });
+  })
 }
 
 var buildArticlesBySource = (sources) => {
@@ -113,12 +114,7 @@ var updateSourcesDb = (callback) => {
         })
         .catch(err => {
           return 'error inserting sources into db', err;
-        })
-          // if (callback) {
-          //   return callback();
-          // } else {
-          //   return 'updated sources db';
-          // }     
+        })    
       })
       .catch(err => {
         return 'error inserting new source data in updateSourcesDb', err;
@@ -135,44 +131,50 @@ var updateSourcesDb = (callback) => {
 
 var updateSinglePersonality = (sourceName, type) => {
   if (!sourceName || !type) {
-    console.log('source and type required for getWatsonPersonality');
+    return 'source and type required for getWatsonPersonality';
   } else {
-    Source.find({name: sourceName})
+    return Source.find({name: sourceName})
     .then(source => {
       var data = {
         "contentItems": JSON.parse(source[0][type][0]),
       };
-      getWatsonProfile(data, (err, personality) => {
-        if (err) {
-          console.log('error accessing Watson');
-        } else {
-          var queryString = `${type}Personality`;
-          Source.updateOne({name: sourceName}, {[queryString]: personality})
-          .then(res => {
-            console.log(`updated personality for ${sourceName}, ${type}`);
-          })
-          .catch(err => {
-            console.log('error updating source');
-          })       
-        }
-      });
+      return getWatsonProfile(data)
+      .then(res => {
+        var queryString = `${type}Personality`;
+        return Source.updateOne({name: sourceName}, {[queryString]: personality})
+        .then(res => {
+          return `updated personality for ${sourceName}, ${type}`;
+        })
+        .catch(err => {
+          return 'error updating source', err;
+        })
+      })
+      .catch(err => {
+        return 'error accessing Watson', err;
+      })
     })
     .catch(err => {
-      console.log('error finding source in getWatsonPersonality');
+      return 'error finding source in updateSinglePersonality', err;
     });
   }
 }
 
 var updateAllPersonalities = () => {
-  Source.find({}, 'name')
+  return Source.find({}, 'name')
   .then(sourceNames => {
-    sourceNames.forEach(source => {
-      updateSinglePersonality(source.name, 'fullTexts');
-      updateSinglePersonality(source.name, 'titles');
+    var promises = sourceNames.map(source => {
+      return updateSinglePersonality(source.name, 'fullTexts');
     });
+    return Promise.all(promises)
+    .then(res => {
+      return 'updated all personalities';
+    })
+    .catch(err => {
+      return 'error updating all personalities', err;
+    })
   })
   .catch(err => {
-    console.error(err);
+    return 'error pulling sources for personalties', err;
   })
 }
 
