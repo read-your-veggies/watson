@@ -93,7 +93,7 @@ var buildNewSourceData = (articlesBySource) => {
   return newSourceData;
 }
 
-var updateSourcesDb = () => {
+var updateSourcesDb = (callback) => {
   Article.find({})
   .then(articles => {
     Source.find({})
@@ -107,8 +107,11 @@ var updateSourcesDb = () => {
     .then(newSourceData => {
       Source.remove({})
       .then(() => {
-        Source.insertMany(newSourceData);
-        console.log('updated sources db');
+        Source.insertMany(newSourceData, (err, res) => {
+          if (err) console.log(err);
+          console.log('updated sources db');
+          if (callback) callback();
+        });    
       })
       .catch(err => {
         console.log('error inserting new source data in updateSourcesDb');

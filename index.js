@@ -5,3 +5,4 @@ exports.handler = () => {
       watson.updateAllPersonalities();
     });
 };
+
