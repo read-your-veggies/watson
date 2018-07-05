@@ -166,5 +166,5 @@ var updateAllPersonalities = () => {
   })
 }
 
-module.exports = { getWatsonProfile, updateSourcesDb, updateSinglePersonality, updateAllPersonalities }
+module.exports = { updateSourcesDb, updateAllPersonalities }
 
